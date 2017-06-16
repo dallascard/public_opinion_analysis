@@ -265,7 +265,7 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
 
     fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'surge_diff_abs'])
     with open(os.path.join(output_dir, 'surge_diff_abs.txt'), 'a') as f:
-        f.write('\n' + subject + '\n')
+        f.write('\n\n' + subject + '\n=========\n')
         f.write(model.summary().as_text())
 
     for tone_col in tone_cols:
@@ -273,22 +273,22 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
 
         fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col])
         with open(os.path.join(output_dir, tone_col + '.txt'), 'a') as f:
-            f.write('\n\n' + subject + '=========\n')
+            f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
 
         fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories'])
         with open(os.path.join(output_dir, tone_col + '__' + 'stories.txt'), 'a') as f:
-            f.write('\n\n' + subject + '=========\n')
+            f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
 
         fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories'])
         with open(os.path.join(output_dir, tone_col + '__stories__tXs.txt'), 'a') as f:
-            f.write('\n\n' + subject + '=========\n')
+            f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
 
         fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories'])
         with open(os.path.join(output_dir, tone_col + '_X_stories.txt'), 'a') as f:
-            f.write('\n\n' + subject + '=========\n')
+            f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
 
         for dom_col in dom_cols:
@@ -297,22 +297,22 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', dom_col])
             with open(os.path.join(output_dir, tone_col + '__' + 'stories' + '__' + dom_col + '.txt'), 'a') as f:
-                f.write('\n\n' + subject + '=========\n')
+                f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories', dom_col, 'dom_X_tone'])
             with open(os.path.join(output_dir, tone_col + '____tXs__' + dom_col + '__dXt.txt'), 'a') as f:
-                f.write('\n\n' + subject + '=========\n')
+                f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', dom_col, 'dom_X_tone_X_stories'])
             with open(os.path.join(output_dir, tone_col + '_X_stories__' + dom_col + '__dXtXs.txt'), 'a') as f:
-                f.write('\n\n' + subject + '=========\n')
+                f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'dom_X_tone_X_stories'])
             with open(os.path.join(output_dir, tone_col + '_X_stories_X_' + dom_col + '.txt'), 'a') as f:
-                f.write('\n\n' + subject + '=========\n')
+                f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
 
