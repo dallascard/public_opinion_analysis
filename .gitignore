@@ -1,0 +1,5 @@
+results
+code/*.pyc
+code/*.iml
+code/.idea
+code/__pycache__
