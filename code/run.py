@@ -50,9 +50,9 @@ def main():
                       help='Use the log of the number of stories  : default=%default')
     parser.add_option('--transform', action="store_true", dest="transform", default=False,
                       help='Transform mood to real space : default=%default')
-    parser.add_option('--n_periods', dest='n_periods', default=2,
+    parser.add_option('--n_periods', dest='n_periods', default=6,
                       help='Number of periods to use for predicting polls: default=%default')
-    parser.add_option('--n_surge', dest='n_surge', default=6,
+    parser.add_option('--n_surge', dest='n_surge', default=1,
                       help='Number of blocks of time to use for surge comparison: default=%default')
 
 
