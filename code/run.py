@@ -301,7 +301,12 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
                 f.write(model.summary().as_text())
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories', dom_col, 'dom_X_tone'])
-            with open(os.path.join(output_dir, tone_col + '____tXs__' + dom_col + '__dXt.txt'), 'a') as f:
+            with open(os.path.join(output_dir, tone_col + '__stories__tXs__' + dom_col + '__dXt.txt'), 'a') as f:
+                f.write('\n\n' + subject + '\n=========\n')
+                f.write(model.summary().as_text())
+
+            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', dom_col])
+            with open(os.path.join(output_dir, tone_col + '_X_stories__' + dom_col + '.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
