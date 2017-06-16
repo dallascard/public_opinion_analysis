@@ -231,8 +231,10 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
         df = prep_to_predict_mood(df_smoothed, n_surge)
 
     base_dir = os.path.join('..', 'results')
-    tone_cols = ['tone', 'tone_max_diff', 'tone_dom_diff']
-    dom_cols = ['dom', 'dom_split', 'below_mean', 'below_mean_split', 'surge', 'surge_split']
+    #tone_cols = ['tone', 'tone_max_diff', 'tone_dom_diff']
+    tone_cols = ['tone']
+    #dom_cols = ['dom', 'dom_split', 'below_mean', 'below_mean_split', 'surge', 'surge_split']
+    dom_cols = ['dom_split', 'below_mean_split', 'surge_split']
 
     if log_stories:
         df['stories'] = np.log(df['stories'].values)
