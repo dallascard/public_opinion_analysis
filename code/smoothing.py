@@ -1,6 +1,8 @@
 import numpy as np
 import statsmodels.api as sm
 from sklearn.linear_model import LinearRegression as LR
+from scipy.interpolate import interp1d
+
 
 def local_linear(x, y, pred_range, bw='cv_ls'):
     """
@@ -20,3 +22,10 @@ def linear(x, y, pred_range, weights=None):
     smoother = LR()
     smoother.fit(np.reshape(x, (-1, 1)), y, sample_weight=weights)
     return smoother.predict(np.reshape(pred_range, (-1, 1)))
+
+
+def interpolate(x, y, pred_range, kind='cubic'):
+    smoother = interp1d(x, y, kind=kind)
+    pred = smoother(pred_range)
+    return pred
+

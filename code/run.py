@@ -46,14 +46,14 @@ def main():
                       help='Predict polls (else predict mood): default=%default')
     parser.add_option('--body', action="store_true", dest="body", default=False,
                       help='Use body codes (else use primary)   : default=%default')
-    parser.add_option('--log_stories', action="store_true", dest="log_stories", default=False,
-                      help='Use the log of the number of stories  : default=%default')
-    parser.add_option('--transform', action="store_true", dest="transform", default=False,
-                      help='Transform mood to real space : default=%default')
     parser.add_option('--n_periods', dest='n_periods', default=6,
                       help='Number of periods to use for predicting polls: default=%default')
     parser.add_option('--n_surge', dest='n_surge', default=1,
                       help='Number of blocks of time to use for surge comparison: default=%default')
+    parser.add_option('--use_intercept', action="store_true", dest="use_intercept", default=False,
+                      help="Use an intercept in each model: default=%default")
+    parser.add_option('--do_smoothing', action="store_true", dest="do_smoothing", default=False,
+                      help="Smooth everything!: default=%default")
 
 
     (options, args) = parser.parse_args()
@@ -62,10 +62,10 @@ def main():
     max_polls = int(options.max_polls)
     predict_polls = options.polls
     use_body = options.body
-    log_stories = options.log_stories
-    transform_mood = options.transform
     n_periods = int(options.n_periods)
     n_surge = int(options.n_surge)
+    intercept = options.use_intercept
+    smooth = options.do_smoothing
     first_year = 1992
     last_year = 2012
 
@@ -78,10 +78,10 @@ def main():
         print('\n' + subject)
         data_file = os.path.join(data_dir, data_files[s_i])
         polls_file = os.path.join(data_dir, polls_files[s_i])
-        run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, log_stories, transform_mood)
+        run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth)
 
 
-def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, log_stories, transform_mood):
+def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth):
 
     # load framing and tone data
     data = pd.read_csv(data_file, header=0, index_col=0)
@@ -144,27 +144,48 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
 
     # smooth tone, pro, and anti
     print("smoothing tone")
-    tone_smooth = smoothing.local_linear(x=grouped.f_date, y=grouped.tone, pred_range=df_smoothed.f_date, bw='cv_ls')
-    df_smoothed['tone'] = tone_smooth
+    if smooth:
+        tone_smooth = smoothing.local_linear(x=grouped.f_date, y=grouped.tone, pred_range=df_smoothed.f_date, bw='cv_ls')
+        df_smoothed['tone'] = tone_smooth
+        pro_smooth = smoothing.local_linear(x=grouped.f_date, y=grouped.Pro, pred_range=df_smoothed.f_date, bw='cv_ls')
+        df_smoothed['pro'] = pro_smooth
+        anti_smooth = smoothing.local_linear(x=grouped.f_date, y=grouped.Anti, pred_range=df_smoothed.f_date, bw='cv_ls')
+        df_smoothed['anti'] = anti_smooth
 
-    pro_smooth = smoothing.local_linear(x=grouped.f_date, y=grouped.Pro, pred_range=df_smoothed.f_date, bw='cv_ls')
-    df_smoothed['pro'] = pro_smooth
+    else:
+        df_smoothed['tone'] = grouped.tone
+        if df_smoothed['tone'].isnull().any():
+            df_smoothed = interpolate_nans(grouped, 'f_date', 'tone', df_smoothed, 'f_date', 'tone')
+        df_smoothed['pro'] = grouped.Pro
+        if df_smoothed['pro'].isnull().any():
+            df_smoothed = interpolate_nans(grouped, 'f_date', 'Pro', df_smoothed, 'f_date', 'pro')
+        df_smoothed['anti'] = grouped.Anti
+        if df_smoothed['anti'].isnull().any():
+            df_smoothed = interpolate_nans(grouped, 'f_date', 'Anti', df_smoothed, 'f_date', 'anti')
 
-    anti_smooth = smoothing.local_linear(x=grouped.f_date, y=grouped.Anti, pred_range=df_smoothed.f_date, bw='cv_ls')
-    df_smoothed['anti'] = anti_smooth
 
     # smooth frames and frame_X_tone interactions
     print("smoothing frames")
     for f in FRAMES:
         print(f)
-        smoothed = smoothing.local_linear(x=grouped.f_date, y=grouped[f], pred_range=df_smoothed.f_date)
-        df_smoothed[f] = smoothed
+        if smooth:
+            smoothed = smoothing.local_linear(x=grouped.f_date, y=grouped[f], pred_range=df_smoothed.f_date)
+            df_smoothed[f] = smoothed
+        else:
+            df_smoothed[f] = grouped[f]
+            if df_smoothed[f].isnull().any():
+                df_smoothed = interpolate_nans(grouped, 'f_date', f, df_smoothed, 'f_date', f)
 
         for t in ['Pro', 'Anti']:
             col = f + '_' + t
             print(col)
-            smoothed = smoothing.local_linear(x=grouped.f_date, y=grouped[col], pred_range=df_smoothed.f_date)
-            df_smoothed[col] = smoothed
+            if smooth:
+                smoothed = smoothing.local_linear(x=grouped.f_date, y=grouped[col], pred_range=df_smoothed.f_date)
+                df_smoothed[col] = smoothed
+            else:
+                df_smoothed[col] = grouped[col]
+                if df_smoothed[col].isnull().any():
+                    df_smoothed = interpolate_nans(grouped, 'f_date', col, df_smoothed, 'f_date', col)
 
 
     # load polls
@@ -234,12 +255,7 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
     #tone_cols = ['tone', 'tone_max_diff', 'tone_dom_diff']
     tone_cols = ['tone']
     #dom_cols = ['dom', 'dom_split', 'below_mean', 'below_mean_split', 'surge', 'surge_split']
-    dom_cols = ['dom_split', 'below_mean', 'below_mean_split', 'surge_split']
-
-    if log_stories:
-        df['stories'] = np.log(df['stories'].values)
-    if transform_mood:
-        df['mood'] = -np.log(df['mood'].values / (1 - df['mood'].values))
+    dom_cols = ['dom', 'dom_split', 'below_mean', 'below_mean_split']
 
     exp_name = ''
     if predict_polls:
@@ -253,22 +269,18 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
     exp_name += '_' + group_by
     exp_name += '_' + str(n_periods)
     exp_name += '_' + str(n_surge)
-    if log_stories:
-        exp_name += '_log'
-    if transform_mood:
-        exp_name += '_transform'
     exp_name += '_polls=' + str(max_polls)
 
     output_dir = os.path.join(base_dir, exp_name)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood'], add_intercept=False)
+    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood'], add_intercept=intercept)
     with open(os.path.join(output_dir, 'prev_mood.txt'), 'a') as f:
         f.write('\n\n' + subject + '\n=========\n')
         f.write(model.summary().as_text())
 
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'surge_diff_abs'], add_intercept=False)
+    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'surge_diff_abs'], add_intercept=intercept)
     with open(os.path.join(output_dir, 'surge_diff_abs.txt'), 'a') as f:
         f.write('\n\n' + subject + '\n=========\n')
         f.write(model.summary().as_text())
@@ -276,22 +288,22 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
     for tone_col in tone_cols:
         df['tone_X_stories'] = df[tone_col] * df['stories']
 
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col], add_intercept=False)
+        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
 
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories'], add_intercept=False)
+        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories'], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '__' + 'stories.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
 
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories'], add_intercept=False)
+        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories'], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '__stories__tXs.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
 
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories'], add_intercept=False)
+        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories'], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '_X_stories.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
@@ -300,27 +312,27 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
             df['dom_X_tone'] = df[dom_col] * df[tone_col]
             df['dom_X_tone_X_stories'] = df[dom_col] * df['tone_X_stories']
 
-            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', dom_col], add_intercept=False)
+            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', dom_col], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '__' + 'stories' + '__' + dom_col + '.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
-            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories', dom_col, 'dom_X_tone'], add_intercept=False)
+            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories', dom_col, 'dom_X_tone'], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '__stories__tXs__' + dom_col + '__dXt.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
-            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', dom_col], add_intercept=False)
+            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', dom_col], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '_X_stories__' + dom_col + '.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
-            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', dom_col, 'dom_X_tone_X_stories'], add_intercept=False)
+            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', dom_col, 'dom_X_tone_X_stories'], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '_X_stories__' + dom_col + '__dXtXs.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
 
-            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'dom_X_tone_X_stories'], add_intercept=False)
+            fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'dom_X_tone_X_stories'], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '_X_stories_X_' + dom_col + '.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
@@ -347,6 +359,11 @@ def interact_framing_and_tone(df):
             df2[col] = df[f] * df[t]
     return df2
 
+
+def interpolate_nans(input_df, input_x, input_y, output_df, output_x, output_y):
+    output_df['interp'] = smoothing.interpolate(x=input_df[input_x], y=input_df[input_y], pred_range=output_df[output_x])
+    output_df.loc[output_df[output_y].isnull(), output_y] = output_df.loc[output_df[output_y].isnull(), 'interp']
+    return output_df
 
 def wavg(df, col, weight_col):
     return np.sum(df[col] * df[weight_col]) / max(1, df[weight_col].sum())
