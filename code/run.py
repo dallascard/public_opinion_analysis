@@ -269,7 +269,11 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
     exp_name += '_' + group_by
     exp_name += '_' + str(n_periods)
     exp_name += '_' + str(n_surge)
-    exp_name += '_polls=' + str(max_polls)
+    exp_name += '_polls' + str(max_polls)
+    if smooth:
+        exp_name += '_smooth'
+    if intercept:
+        exp_name += '_intercept'
 
     output_dir = os.path.join(base_dir, exp_name)
     if not os.path.exists(output_dir):
