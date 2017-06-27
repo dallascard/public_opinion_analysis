@@ -312,7 +312,7 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
             f.write(model.summary().as_text())
             f.write("\nRMSE=%0.4f" % rmse)
 
-        df['tone_X_stories_scaled'] = df['tone_X_stories'].values / df['tone_X_stories'].max())
+        df['tone_X_stories_scaled'] = df['tone_X_stories'].values / df['tone_X_stories'].max()
         fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories_scaled'], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '_X_stories.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
