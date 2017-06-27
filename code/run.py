@@ -312,11 +312,22 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
             f.write(model.summary().as_text())
             f.write("\nRMSE=%0.4f" % rmse)
 
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories'], add_intercept=intercept)
+        df['tone_X_stories_scaled'] = df['tone_X_stories'].values / df['tone_X_stories'].max())
+        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories_scaled'], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '_X_stories.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
             f.write("\nRMSE=%0.4f" % rmse)
+
+        divisor = np.max([np.max(df['dom_pro'].values), np.max(df['dom_anti'].values)])
+        df['dom_pro_scaled'] = df['dom_pro'].values / float(divisor)
+        df['dom_anti_scaled'] = df['dom_anti'].values / float(divisor)
+        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'dom_pro_scaled', 'dom_anti_scaled'], add_intercept=intercept)
+        with open(os.path.join(output_dir, 'dom_pro_and_anti.txt'), 'a') as f:
+            f.write('\n\n' + subject + '\n=========\n')
+            f.write(model.summary().as_text())
+            f.write("\nRMSE=%0.4f" % rmse)
+
 
         for dom_col in dom_cols:
             df['dom_X_tone'] = df[dom_col] * df[tone_col]
