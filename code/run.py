@@ -283,11 +283,13 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
     with open(os.path.join(output_dir, 'prev_mood.txt'), 'a') as f:
         f.write('\n\n' + subject + '\n=========\n')
         f.write(model.summary().as_text())
+        f.write("\nRMSE=%0.4f" % rmse)
 
     fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'surge_diff_abs'], add_intercept=intercept)
     with open(os.path.join(output_dir, 'surge_diff_abs.txt'), 'a') as f:
         f.write('\n\n' + subject + '\n=========\n')
         f.write(model.summary().as_text())
+        f.write("\nRMSE=%0.4f" % rmse)
 
     for tone_col in tone_cols:
         df['tone_X_stories'] = df[tone_col] * df['stories']
@@ -296,21 +298,25 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
         with open(os.path.join(output_dir, tone_col + '.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
+            f.write("\nRMSE=%0.4f" % rmse)
 
         fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories'], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '__' + 'stories.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
+            f.write("\nRMSE=%0.4f" % rmse)
 
         fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories'], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '__stories__tXs.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
+            f.write("\nRMSE=%0.4f" % rmse)
 
         fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories'], add_intercept=intercept)
         with open(os.path.join(output_dir, tone_col + '_X_stories.txt'), 'a') as f:
             f.write('\n\n' + subject + '\n=========\n')
             f.write(model.summary().as_text())
+            f.write("\nRMSE=%0.4f" % rmse)
 
         for dom_col in dom_cols:
             df['dom_X_tone'] = df[dom_col] * df[tone_col]
@@ -320,26 +326,31 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
             with open(os.path.join(output_dir, tone_col + '__' + 'stories' + '__' + dom_col + '.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
+                f.write("\nRMSE=%0.4f" % rmse)
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories', dom_col, 'dom_X_tone'], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '__stories__tXs__' + dom_col + '__dXt.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
+                f.write("\nRMSE=%0.4f" % rmse)
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', dom_col], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '_X_stories__' + dom_col + '.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
+                f.write("\nRMSE=%0.4f" % rmse)
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', dom_col, 'dom_X_tone_X_stories'], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '_X_stories__' + dom_col + '__dXtXs.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
+                f.write("\nRMSE=%0.4f" % rmse)
 
             fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'dom_X_tone_X_stories'], add_intercept=intercept)
             with open(os.path.join(output_dir, tone_col + '_X_stories_X_' + dom_col + '.txt'), 'a') as f:
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
+                f.write("\nRMSE=%0.4f" % rmse)
 
 
 def rename_framing_columns(df, use_body=False):
