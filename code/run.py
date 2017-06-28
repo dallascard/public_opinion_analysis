@@ -463,7 +463,7 @@ def prep_to_predict_polls(polls, df_smoothed, n_periods, n_surge):
         polls_subset.loc[poll, 'anti'] = wavg(curr_grouped_subset, 'anti', 'stories')
         polls_subset.loc[poll, 'stories'] = curr_grouped_subset['stories'].sum()
         polls_subset.loc[poll, 'prev_mood'] = prev_grouped_subset.mood.mean()
-        polls_subset.loc[poll, 'mood_diff'] = polls_subset.mood - polls_subset.prev_mood
+        polls_subset.loc[poll, 'mood_diff'] = polls_subset.loc[poll, 'mood'] - polls_subset.loc[polls, 'prev_mood']
 
         # compute max values for pro and anti
         col_avgs = curr_grouped_subset.mean()
