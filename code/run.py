@@ -291,7 +291,7 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
         f.write(model.summary().as_text())
         f.write("\nRMSE=%0.4f" % rmse)
 
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone' 'surge_diff_abs'], add_intercept=intercept)
+    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone', 'surge_diff_abs'], add_intercept=intercept)
     with open(os.path.join(output_dir, 'tone__surge_diff_abs.txt'), 'a') as f:
         f.write('\n\n' + subject + '\n=========\n')
         f.write(model.summary().as_text())
