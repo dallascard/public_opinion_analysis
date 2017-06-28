@@ -304,6 +304,12 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
         f.write(model.summary().as_text())
         f.write("\nRMSE=%0.4f" % rmse)
 
+    fitted, rmse, model = stats.ols(df=df, target='mood_diff', columns=['surge_diff_abs'], add_intercept=intercept)
+    with open(os.path.join(output_dir, 'surge_diff_abs__onMoodDiff.txt'), 'a') as f:
+        f.write('\n\n' + subject + '\n=========\n')
+        f.write(model.summary().as_text())
+        f.write("\nRMSE=%0.4f" % rmse)
+
     for tone_col in tone_cols:
         df['tone_X_stories'] = df[tone_col] * df['stories']
         df['dom_diff_X_stories'] = (df['dom_pro'].values - df['dom_anti'].values) * df['stories'].values
@@ -457,6 +463,7 @@ def prep_to_predict_polls(polls, df_smoothed, n_periods, n_surge):
         polls_subset.loc[poll, 'anti'] = wavg(curr_grouped_subset, 'anti', 'stories')
         polls_subset.loc[poll, 'stories'] = curr_grouped_subset['stories'].sum()
         polls_subset.loc[poll, 'prev_mood'] = prev_grouped_subset.mood.mean()
+        polls_subset.loc[poll, 'mood_diff'] = polls_subset.mood - polls.subset.prev_mood
 
         # compute max values for pro and anti
         col_avgs = curr_grouped_subset.mean()
