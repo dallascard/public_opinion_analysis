@@ -582,7 +582,7 @@ def prep_to_predict_mood(df_smoothed, n_surge):
                 prev_rows = df_smoothed[(df_smoothed.period < i) & (df_smoothed.period >= i - n_surge)]
                 if n_surge == 1:
                     prev_wavg = prev_rows[group]
-                    prev_wsum = prev_rows[group]
+                    prev_wsum = prev_rows[group].sum()
                     prev_wavg_vals = prev_wavg.values[0, :]
                     for f in group:
                         prev_wsum[f] = wsum(prev_rows, f, 'stories') / float(n_surge)
