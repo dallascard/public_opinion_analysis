@@ -521,6 +521,7 @@ def prep_to_predict_polls(polls, df_smoothed, n_periods, n_surge):
 def prep_to_predict_mood(df_smoothed, n_surge):
     # take the mood from the previous period
     df_smoothed['prev_mood'] = df_smoothed['mood'].shift().as_matrix()
+    df_smoothed['mood_diff'] = df_smoothed['mood'] - df_smoothed['prev_mood']
 
     # compute tone as a difference of pro and anti
     df_smoothed['tone'] = df_smoothed['pro'] - df_smoothed['anti']
