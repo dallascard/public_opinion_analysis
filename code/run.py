@@ -279,6 +279,14 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
+    # save data frame
+    intermediate_dir = os.path.join('..', 'intermediate')
+    if not os.path.exists(intermediate_dir):
+        os.makedirs(intermediate_dir)
+    output_filename = os.path.join(output_dir, exp_name + '.csv')
+    df.to_csv(output_filename)
+
+    # run the analyses
     fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood'], add_intercept=intercept)
     with open(os.path.join(output_dir, 'prev_mood.txt'), 'a') as f:
         f.write('\n\n' + subject + '\n=========\n')
