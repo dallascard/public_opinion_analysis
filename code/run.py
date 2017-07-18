@@ -283,7 +283,7 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
     intermediate_dir = os.path.join('..', 'intermediate')
     if not os.path.exists(intermediate_dir):
         os.makedirs(intermediate_dir)
-    output_filename = os.path.join(output_dir, exp_name + '.csv')
+    output_filename = os.path.join(output_dir, exp_name + '_' + subject + '.csv')
     df.to_csv(output_filename)
 
     # run the analyses
