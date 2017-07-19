@@ -78,10 +78,13 @@ def main():
         print('\n' + subject)
         data_file = os.path.join(data_dir, data_files[s_i])
         polls_file = os.path.join(data_dir, polls_files[s_i])
-        run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth)
+        if subject == 'gun control':
+            run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth, invert_tone=True)    
+        else:
+            run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth)
 
 
-def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth):
+def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth, invert_tone=False):
 
     # load framing and tone data
     data = pd.read_csv(data_file, header=0, index_col=0)
@@ -94,6 +97,11 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
 
     # count each row as one story
     data['stories'] = 1
+
+    if invert_tone:
+        temp = data['Pro'].values.copy()
+        data['Pro'] = data['Anti']
+        data['Anti'] = temp
 
     # compute tone
     data['tone'] = data['Pro'] - data['Anti']
@@ -253,9 +261,9 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
 
     base_dir = os.path.join('..', 'results')
     #tone_cols = ['tone', 'tone_max_diff', 'tone_dom_diff']
-    tone_cols = ['tone']
+    tone_cols = ['tone', 'tone_max_diff']
     #dom_cols = ['dom', 'dom_split', 'below_mean', 'below_mean_split', 'surge', 'surge_split']
-    dom_cols = ['dom', 'dom_split', 'below_mean', 'below_mean_split']
+    dom_cols = ['dom_split']
 
     exp_name = ''
     if predict_polls:
@@ -318,6 +326,18 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
         f.write(model.summary().as_text())
         f.write("\nRMSE=%0.4f" % rmse)
 
+    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_surge'], add_intercept=intercept)
+    with open(os.path.join(output_dir, 'tone_surge.txt'), 'a') as f:
+        f.write('\n\n' + subject + '\n=========\n')
+        f.write(model.summary().as_text())
+        f.write("\nRMSE=%0.4f" % rmse)
+
+    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_surge_abs'], add_intercept=intercept)
+    with open(os.path.join(output_dir, 'tone_surge_abs.txt'), 'a') as f:
+        f.write('\n\n' + subject + '\n=========\n')
+        f.write(model.summary().as_text())
+        f.write("\nRMSE=%0.4f" % rmse)
+
     for tone_col in tone_cols:
         df['tone_X_stories'] = df[tone_col] * df['stories']
         df['dom_diff_X_stories'] = (df['dom_pro'].values - df['dom_anti'].values) * df['stories'].values
@@ -366,7 +386,7 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
             f.write(model.summary().as_text())
             f.write("\nRMSE=%0.4f" % rmse)
 
-
+        """
         for dom_col in dom_cols:
             df['dom_X_tone'] = df[dom_col] * df[tone_col]
             df['dom_X_tone_X_stories'] = df[dom_col] * df['tone_X_stories']
@@ -400,7 +420,7 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
                 f.write('\n\n' + subject + '\n=========\n')
                 f.write(model.summary().as_text())
                 f.write("\nRMSE=%0.4f" % rmse)
-
+        """
 
 def rename_framing_columns(df, use_body=False):
     columns = list(df.columns)
@@ -446,16 +466,6 @@ def prep_to_predict_polls(polls, df_smoothed, n_periods, n_surge):
     polls_subset = polls[(polls.period > df_smoothed.period.min() + n_periods * 2) & (polls.period <= df_smoothed.period.max())]
     polls_subset = polls_subset.sort_values(by='date')
 
-    #polls_subset['pro'] = np.NaN
-    #polls_subset['anti'] = np.NaN
-    #polls_subset['pro_max'] = np.NaN
-    #polls_subset['anti_max'] = np.NaN
-    #polls_subset['pro_dom'] = np.NaN
-    #polls_subset['anti_dom'] = np.NaN
-    #polls_subset['prev_mood'] = np.NaN
-    #polls_subset['below_mean'] = np.NaN
-    #polls_subset['below_mean_split'] = np.NaN
-
     pro_cols = [f + '_' + 'Pro' for f in FRAMES]
     anti_cols = [f + '_' + 'Anti' for f in FRAMES]
     cols_both = pro_cols + anti_cols
@@ -482,15 +492,15 @@ def prep_to_predict_polls(polls, df_smoothed, n_periods, n_surge):
         polls_subset.loc[poll, 'anti_max'] = col_avgs[anti_cols].max()
 
         # compute dominance
-        avg_values = col_avgs[FRAMES].values
-        order = np.argsort(avg_values)
-        polls_subset.loc[poll, 'dom'] = avg_values[order[-1]] - avg_values[order[-2]]
-        polls_subset.loc[poll, 'below_mean'] = np.sum(avg_values < np.mean(avg_values))
+        #avg_values = col_avgs[FRAMES].values
+        #order = np.argsort(avg_values)
+        #polls_subset.loc[poll, 'dom'] = avg_values[order[-1]] - avg_values[order[-2]]
+        #polls_subset.loc[poll, 'below_mean'] = np.sum(avg_values < np.mean(avg_values))
 
-        avg_values = col_avgs[cols_both].values
-        order = np.argsort(avg_values)
-        polls_subset.loc[poll, 'dom_split'] = avg_values[order[-1]] - avg_values[order[-2]]
-        polls_subset.loc[poll, 'below_mean_split'] = np.sum(avg_values < np.mean(avg_values))
+        #avg_values = col_avgs[cols_both].values
+        #order = np.argsort(avg_values)
+        #polls_subset.loc[poll, 'dom_split'] = avg_values[order[-1]] - avg_values[order[-2]]
+        #polls_subset.loc[poll, 'below_mean_split'] = np.sum(avg_values < np.mean(avg_values))
 
         pro_avg_values = col_avgs[pro_cols].values
         order = np.argsort(pro_avg_values)
@@ -503,8 +513,10 @@ def prep_to_predict_polls(polls, df_smoothed, n_periods, n_surge):
         polls_subset.loc[poll, 'dom_anti'] = anti_dom
 
         # compute surge
-        col_groups = [FRAMES, pro_cols, anti_cols, cols_both]
-        names = ['surge', 'surge_pro', 'surge_anti', 'surge_split']
+        #col_groups = [FRAMES, pro_cols, anti_cols, cols_both]
+        #names = ['surge', 'surge_pro', 'surge_anti', 'surge_split']
+        col_groups = [pro_cols, anti_cols]
+        names = ['surge_pro', 'surge_anti']
         for g_i, group in enumerate(col_groups):
 
             diff_mean = curr_grouped_subset.sum()
@@ -517,6 +529,10 @@ def prep_to_predict_polls(polls, df_smoothed, n_periods, n_surge):
                 max_frame = np.argmax(diff_sum[group])
                 polls_subset.loc[poll, names[g_i] + '_abs'] = diff_sum[max_frame]
                 polls_subset.loc[poll, names[g_i]] = diff_mean[max_frame]
+
+        polls_subset.loc[poll, 'tone_surge'] = wavg(curr_grouped_subset, 'tone', 'stories') - wavg(prev_grouped_subset, 'tone', 'stories')
+        polls_subset.loc[poll, 'tone_surge_abs'] = wsum(curr_grouped_subset, 'tone', 'stories') - wsum(prev_grouped_subset, 'tone', 'stories')
+
 
     polls_subset['tone_max_diff'] = polls_subset['pro_max'] - polls_subset['anti_max']
     polls_subset['tone_dom_diff'] = polls_subset['dom_pro'] - polls_subset['dom_anti']
@@ -554,36 +570,38 @@ def prep_to_predict_mood(df_smoothed, n_surge):
     #df_smoothed['below_mean_anti'] = 0
 
     for i in df_smoothed.index:
-        vals = df_smoothed.loc[i, FRAMES].values
-        order = np.argsort(vals)
-        df_smoothed.loc[i, 'dom'] = vals[order[-1]] - vals[order[-2]]
-        df_smoothed.loc[i, 'below_mean'] = np.sum(vals < np.mean(vals))
+        #vals = df_smoothed.loc[i, FRAMES].values
+        #order = np.argsort(vals)
+        #df_smoothed.loc[i, 'dom'] = vals[order[-1]] - vals[order[-2]]
+        #df_smoothed.loc[i, 'below_mean'] = np.sum(vals < np.mean(vals))
 
-        vals = df_smoothed.loc[i, cols_split].values
-        order = np.argsort(vals)
-        df_smoothed.loc[i, 'dom_split'] = vals[order[-1]] - vals[order[-2]]
-        df_smoothed.loc[i, 'below_mean_split'] = np.sum(vals < np.mean(vals))
+        #vals = df_smoothed.loc[i, cols_split].values
+        #order = np.argsort(vals)
+        #df_smoothed.loc[i, 'dom_split'] = vals[order[-1]] - vals[order[-2]]
+        #df_smoothed.loc[i, 'below_mean_split'] = np.sum(vals < np.mean(vals))
 
         vals = df_smoothed.loc[i, pro_cols].values
         order = np.argsort(vals)
         df_smoothed.loc[i, 'dom_pro'] = vals[order[-1]] - vals[order[-2]]
-        df_smoothed.loc[i, 'below_mean_pro'] = np.sum(vals < np.mean(vals))
+        #df_smoothed.loc[i, 'below_mean_pro'] = np.sum(vals < np.mean(vals))
 
         vals = df_smoothed.loc[i, anti_cols].values
         order = np.argsort(vals)
         df_smoothed.loc[i, 'dom_anti'] = vals[order[-1]] - vals[order[-2]]
-        df_smoothed.loc[i, 'below_mean_anti'] = np.sum(vals < np.mean(vals))
+        #df_smoothed.loc[i, 'below_mean_anti'] = np.sum(vals < np.mean(vals))
 
     df_smoothed['tone_dom_diff'] = df_smoothed['dom_pro'] - df_smoothed['dom_anti']
 
     # compute tone as a difference in surge
-    df_smoothed['surge'] = np.NaN
+    #df_smoothed['surge'] = np.NaN
     df_smoothed['surge_pro'] = np.NaN
     df_smoothed['surge_anti'] = np.NaN
-    df_smoothed['surge_split'] = np.NaN
+    #df_smoothed['surge_split'] = np.NaN
     for enum_i, i in enumerate(df_smoothed.index):
-        col_groups = [FRAMES, pro_cols, anti_cols, cols_split]
-        names = ['surge', 'surge_pro', 'surge_anti', 'surge_split']
+        #col_groups = [FRAMES, pro_cols, anti_cols, cols_split]
+        #names = ['surge', 'surge_pro', 'surge_anti', 'surge_split']
+        col_groups = [pro_cols, anti_cols, ['tone']]
+        names = ['surge_pro', 'surge_anti', 'tone_surge']
         for g_i, group in enumerate(col_groups):
             if enum_i > n_surge:
                 vals_abs = df_smoothed.loc[i, group].values * df_smoothed.loc[i, 'stories']

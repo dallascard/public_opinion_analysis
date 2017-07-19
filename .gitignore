@@ -1,4 +1,5 @@
 results
+intermediate
 code/*.pyc
 code/*.iml
 code/.idea
