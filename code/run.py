@@ -67,21 +67,40 @@ def main():
     intercept = options.use_intercept
     smooth = options.do_smoothing
     first_year = 1992
-    last_year = 2012
 
     subjects = ['immigration', 'same-sex marriage', 'gun control']
     data_files = ['immigration_with_metadata_2017_05_25.csv', 'ssm_with_metadata_2017_05_25.csv', 'guncontrol_with_metadata_2017_05_25.csv']
-    polls_files = ['immigration_polls_dedup_merge.csv', 'samesex_marriage_polls.csv', 'gun_control_for_wcalc_corrected.csv']
+    polls_files = ['immigration_polls.csv', 'ssm_polls.csv', 'guncontrol_polls.csv']
     data_dir = os.path.join('..', 'data')
+
+    columns = []
+    for s in subjects:
+        columns.append(s + '_rmse')
+        columns.append(s + '_loocv_rmse')
+        columns.append(s + '_rank')
+        columns.append(s + '_loocv_rank')
+    results_df = pd.DataFrame([], columns=columns)
 
     for s_i, subject in enumerate(subjects):
         print('\n' + subject)
         data_file = os.path.join(data_dir, data_files[s_i])
         polls_file = os.path.join(data_dir, polls_files[s_i])
         if subject == 'gun control':
-            run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth, invert_tone=True)    
+            model_names, rmses, loocvs, output_dir = run_analysis(subject, data_file, polls_file, first_year, 2016, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth, invert_tone=True)
         else:
-            run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth)
+            model_names, rmses, loocvs, output_dir = run_analysis(subject, data_file, polls_file, first_year, 2012, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth)
+        results_df[subject + '_rmse'] = rmses
+        results_df[subject + '_loocv_rmse'] = loocvs
+        order = np.argsort(rmses)
+        ranks = np.argsort(order)
+        results_df[subject + '_rank'] = ranks
+        order = np.argsort(loocvs)
+        ranks = np.argsort(order)
+        results_df[subject + '_loocv_rank'] = ranks
+
+    results_df.index = model_names
+    print(results_df)
+    results_df.to_csv(os.path.join(output_dir, 'summary.csv'))
 
 
 def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by, predict_polls, use_body, max_polls, n_periods, n_surge, intercept, smooth, invert_tone=False):
@@ -294,97 +313,35 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
     output_filename = os.path.join(intermediate_dir, exp_name + '_' + subject + '.csv')
     df.to_csv(output_filename)
 
+    # create some lists of results:
+    models = []
+    rmses = []
+    loocvs = []
+
     # run the analyses
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood'], add_intercept=intercept)
-    with open(os.path.join(output_dir, 'prev_mood.txt'), 'a') as f:
-        f.write('\n\n' + subject + '\n=========\n')
-        f.write(model.summary().as_text())
-        f.write("\nRMSE=%0.4f" % rmse)
+    models, rmses, loocvs = run_model(df, 'mood', ['prev_mood'], intercept, models, rmses, loocvs, output_dir, 'prev_mood', subject)
 
+    models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', 'surge_diff_abs'], intercept, models, rmses, loocvs, output_dir, 'surge_diff_abs', subject)
 
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'surge_diff'], add_intercept=intercept)
-    with open(os.path.join(output_dir, 'surge_diff.txt'), 'a') as f:
-        f.write('\n\n' + subject + '\n=========\n')
-        f.write(model.summary().as_text())
-        f.write("\nRMSE=%0.4f" % rmse)
+    #models, rmses, loocvs = run_model(df, 'mood_diff', ['surge_diff_abs'], intercept, models, rmses, loocvs, output_dir, 'surge_diff_abs__onMoodDiff', subject)
 
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'surge_diff', 'stories'], add_intercept=intercept)
-    with open(os.path.join(output_dir, 'surge_diff__stories.txt'), 'a') as f:
-        f.write('\n\n' + subject + '\n=========\n')
-        f.write(model.summary().as_text())
-        f.write("\nRMSE=%0.4f" % rmse)
-
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'surge_diff_abs'], add_intercept=intercept)
-    with open(os.path.join(output_dir, 'surge_diff_abs.txt'), 'a') as f:
-        f.write('\n\n' + subject + '\n=========\n')
-        f.write(model.summary().as_text())
-        f.write("\nRMSE=%0.4f" % rmse)
-
-    fitted, rmse, model = stats.ols(df=df, target='mood_diff', columns=['surge_diff_abs'], add_intercept=intercept)
-    with open(os.path.join(output_dir, 'surge_diff_abs__onMoodDiff.txt'), 'a') as f:
-        f.write('\n\n' + subject + '\n=========\n')
-        f.write(model.summary().as_text())
-        f.write("\nRMSE=%0.4f" % rmse)
-
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_surge'], add_intercept=intercept)
-    with open(os.path.join(output_dir, 'tone_surge.txt'), 'a') as f:
-        f.write('\n\n' + subject + '\n=========\n')
-        f.write(model.summary().as_text())
-        f.write("\nRMSE=%0.4f" % rmse)
-
-    fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_surge_abs'], add_intercept=intercept)
-    with open(os.path.join(output_dir, 'tone_surge_abs.txt'), 'a') as f:
-        f.write('\n\n' + subject + '\n=========\n')
-        f.write(model.summary().as_text())
-        f.write("\nRMSE=%0.4f" % rmse)
+    models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', 'tone_surge_abs'], intercept, models, rmses, loocvs, output_dir, 'tone_surge_abs', subject)
 
     for tone_col in tone_cols:
         df['tone_X_stories'] = df[tone_col] * df['stories']
         df['dom_diff_X_stories'] = (df['dom_pro'].values - df['dom_anti'].values) * df['stories'].values
 
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone', 'surge_diff_abs'], add_intercept=intercept)
-        with open(os.path.join(output_dir, 'tone__surge_diff_abs.txt'), 'a') as f:
-            f.write('\n\n' + subject + '\n=========\n')
-            f.write(model.summary().as_text())
-            f.write("\nRMSE=%0.4f" % rmse)
+        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col], intercept, models, rmses, loocvs, output_dir, tone_col, subject)
 
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories', 'surge_diff_abs'], add_intercept=intercept)
-        with open(os.path.join(output_dir, 'tone_X_stories__surge_diff_abs.txt'), 'a') as f:
-            f.write('\n\n' + subject + '\n=========\n')
-            f.write(model.summary().as_text())
-            f.write("\nRMSE=%0.4f" % rmse)
+        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col, 'stories'], intercept, models, rmses, loocvs, output_dir, tone_col + '_stories', subject)
 
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col], add_intercept=intercept)
-        with open(os.path.join(output_dir, tone_col + '.txt'), 'a') as f:
-            f.write('\n\n' + subject + '\n=========\n')
-            f.write(model.summary().as_text())
-            f.write("\nRMSE=%0.4f" % rmse)
-
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories'], add_intercept=intercept)
-        with open(os.path.join(output_dir, tone_col + '__' + 'stories.txt'), 'a') as f:
-            f.write('\n\n' + subject + '\n=========\n')
-            f.write(model.summary().as_text())
-            f.write("\nRMSE=%0.4f" % rmse)
-
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', tone_col, 'stories', 'tone_X_stories'], add_intercept=intercept)
-        with open(os.path.join(output_dir, tone_col + '__stories__tXs.txt'), 'a') as f:
-            f.write('\n\n' + subject + '\n=========\n')
-            f.write(model.summary().as_text())
-            f.write("\nRMSE=%0.4f" % rmse)
+        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col, 'stories', 'tone_X_stories'], intercept, models, rmses, loocvs, output_dir, tone_col + '_stories__tXs', subject)
 
         df['tone_X_stories_scaled'] = df['tone_X_stories'].values / df['tone_X_stories'].max()
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'tone_X_stories_scaled'], add_intercept=intercept)
-        with open(os.path.join(output_dir, tone_col + '_X_stories_scaled.txt'), 'a') as f:
-            f.write('\n\n' + subject + '\n=========\n')
-            f.write(model.summary().as_text())
-            f.write("\nRMSE=%0.4f" % rmse)
+        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', 'tone_X_stories_scaled'], intercept, models, rmses, loocvs, output_dir, tone_col + '_X_stories_scaled', subject)
 
         df['dom_diff_X_stories_scaled'] = df['dom_diff_X_stories'] / df['dom_diff_X_stories'].max()
-        fitted, rmse, model = stats.ols(df=df, target='mood', columns=['prev_mood', 'dom_diff_X_stories_scaled'], add_intercept=intercept)
-        with open(os.path.join(output_dir, 'dom_diff_X_stories_scaled.txt'), 'a') as f:
-            f.write('\n\n' + subject + '\n=========\n')
-            f.write(model.summary().as_text())
-            f.write("\nRMSE=%0.4f" % rmse)
+        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', 'dom_diff_X_stories_scaled'], intercept, models, rmses, loocvs, output_dir, 'dom_diff_X_stories_scaled', subject)
 
         """
         for dom_col in dom_cols:
@@ -421,6 +378,22 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
                 f.write(model.summary().as_text())
                 f.write("\nRMSE=%0.4f" % rmse)
         """
+    return models, rmses, loocvs, output_dir
+
+
+def run_model(df, target, columns, intercept, model_names, rmses, loocv_rmses, output_dir, filename, subject):
+    fitted, rmse, model = stats.ols(df=df, target=target, columns=columns, add_intercept=intercept)
+    predictions, loocv_rmse = stats.eval_loocv(df=df, target=target, columns=columns, add_intercept=intercept)
+    with open(os.path.join(output_dir, filename + '.txt'), 'a') as f:
+        f.write('\n\n' + subject + '\n=========\n')
+        f.write(model.summary().as_text())
+        f.write("\nRMSE=%0.4f" % rmse)
+        f.write("\nLOOCV RMSE=%0.4f" % loocv_rmse)
+    rmses.append(rmse)
+    loocv_rmses.append(loocv_rmse)
+    model_names.append(filename)
+    return model_names, rmses, loocv_rmses
+
 
 def rename_framing_columns(df, use_body=False):
     columns = list(df.columns)
@@ -532,7 +505,6 @@ def prep_to_predict_polls(polls, df_smoothed, n_periods, n_surge):
 
         polls_subset.loc[poll, 'tone_surge'] = wavg(curr_grouped_subset, 'tone', 'stories') - wavg(prev_grouped_subset, 'tone', 'stories')
         polls_subset.loc[poll, 'tone_surge_abs'] = wsum(curr_grouped_subset, 'tone', 'stories') - wsum(prev_grouped_subset, 'tone', 'stories')
-
 
     polls_subset['tone_max_diff'] = polls_subset['pro_max'] - polls_subset['anti_max']
     polls_subset['tone_dom_diff'] = polls_subset['dom_pro'] - polls_subset['dom_anti']
