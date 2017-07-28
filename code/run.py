@@ -309,6 +309,7 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
         exp_name += '_smooth'
     if intercept:
         exp_name += '_intercept'
+    exp_name += '_limited'
 
     output_dir = os.path.join(base_dir, exp_name)
     if not os.path.exists(output_dir):
@@ -339,17 +340,17 @@ def run_analysis(subject, data_file, polls_file, first_year, last_year, group_by
         df['tone_X_stories'] = df[tone_col] * df['stories']
         df['dom_diff_X_stories'] = (df['dom_pro'].values - df['dom_anti'].values) * df['stories'].values
 
-        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col], intercept, models, rmses, loocvs, output_dir, tone_col, subject)
+        #models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col], intercept, models, rmses, loocvs, output_dir, tone_col, subject)
 
-        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col, 'stories'], intercept, models, rmses, loocvs, output_dir, tone_col + '_stories', subject)
+        #models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col, 'stories'], intercept, models, rmses, loocvs, output_dir, tone_col + '_stories', subject)
 
-        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col, 'stories', 'tone_X_stories'], intercept, models, rmses, loocvs, output_dir, tone_col + '_stories__tXs', subject)
+        #models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', tone_col, 'stories', 'tone_X_stories'], intercept, models, rmses, loocvs, output_dir, tone_col + '_stories__tXs', subject)
 
         df['tone_X_stories_scaled'] = df['tone_X_stories'].values / df['tone_X_stories'].max()
         models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', 'tone_X_stories_scaled'], intercept, models, rmses, loocvs, output_dir, tone_col + '_X_stories_scaled', subject)
 
-        df['dom_diff_X_stories_scaled'] = df['dom_diff_X_stories'] / df['dom_diff_X_stories'].max()
-        models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', 'dom_diff_X_stories_scaled'], intercept, models, rmses, loocvs, output_dir, 'dom_diff_X_stories_scaled', subject)
+        #df['dom_diff_X_stories_scaled'] = df['dom_diff_X_stories'] / df['dom_diff_X_stories'].max()
+        #models, rmses, loocvs = run_model(df, 'mood', ['prev_mood', 'dom_diff_X_stories_scaled'], intercept, models, rmses, loocvs, output_dir, 'dom_diff_X_stories_scaled', subject)
 
         """
         for dom_col in dom_cols:
