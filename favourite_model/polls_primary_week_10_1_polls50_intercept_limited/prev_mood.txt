@@ -1,0 +1,91 @@
+
+
+immigration
+=========
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                   mood   R-squared:                       0.601
+Model:                            OLS   Adj. R-squared:                  0.595
+Method:                 Least Squares   F-statistic:                     101.0
+Date:                Fri, 28 Jul 2017   Prob (F-statistic):           5.21e-15
+Time:                        16:51:15   Log-Likelihood:                 97.553
+No. Observations:                  69   AIC:                            -191.1
+Df Residuals:                      67   BIC:                            -186.6
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     -0.0924      0.059     -1.554      0.125      -0.211       0.026
+prev_mood      1.1875      0.118     10.052      0.000       0.952       1.423
+==============================================================================
+Omnibus:                       12.403   Durbin-Watson:                   1.791
+Prob(Omnibus):                  0.002   Jarque-Bera (JB):               13.801
+Skew:                           0.852   Prob(JB):                      0.00101
+Kurtosis:                       4.378   Cond. No.                         20.5
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+RMSE=0.0597
+LOOCV RMSE=0.0611
+
+same-sex marriage
+=========
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                   mood   R-squared:                       0.534
+Model:                            OLS   Adj. R-squared:                  0.532
+Method:                 Least Squares   F-statistic:                     257.1
+Date:                Fri, 28 Jul 2017   Prob (F-statistic):           4.74e-39
+Time:                        16:51:54   Log-Likelihood:                 360.56
+No. Observations:                 226   AIC:                            -717.1
+Df Residuals:                     224   BIC:                            -710.3
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept      0.0023      0.026      0.088      0.930      -0.050       0.054
+prev_mood      1.0002      0.062     16.035      0.000       0.877       1.123
+==============================================================================
+Omnibus:                       69.595   Durbin-Watson:                   1.972
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              189.920
+Skew:                           1.347   Prob(JB):                     5.75e-42
+Kurtosis:                       6.593   Cond. No.                         22.4
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+RMSE=0.0493
+LOOCV RMSE=0.0494
+
+gun control
+=========
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                   mood   R-squared:                       0.360
+Model:                            OLS   Adj. R-squared:                  0.357
+Method:                 Least Squares   F-statistic:                     113.5
+Date:                Fri, 28 Jul 2017   Prob (F-statistic):           2.58e-21
+Time:                        16:52:51   Log-Likelihood:                 309.58
+No. Observations:                 204   AIC:                            -615.2
+Df Residuals:                     202   BIC:                            -608.5
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+==============================================================================
+                 coef    std err          t      P>|t|      [0.025      0.975]
+------------------------------------------------------------------------------
+Intercept     -0.0379      0.078     -0.487      0.627      -0.191       0.115
+prev_mood      1.0456      0.098     10.653      0.000       0.852       1.239
+==============================================================================
+Omnibus:                       71.844   Durbin-Watson:                   1.941
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              567.808
+Skew:                           1.092   Prob(JB):                    5.04e-124
+Kurtosis:                      10.876   Cond. No.                         42.8
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+RMSE=0.0533
+LOOCV RMSE=0.0534

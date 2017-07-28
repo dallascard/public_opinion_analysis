@@ -1,0 +1,96 @@
+
+
+immigration
+=========
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                   mood   R-squared:                       0.669
+Model:                            OLS   Adj. R-squared:                  0.659
+Method:                 Least Squares   F-statistic:                     66.60
+Date:                Fri, 28 Jul 2017   Prob (F-statistic):           1.47e-16
+Time:                        16:51:15   Log-Likelihood:                 103.94
+No. Observations:                  69   AIC:                            -201.9
+Df Residuals:                      66   BIC:                            -195.2
+Df Model:                           2                                         
+Covariance Type:            nonrobust                                         
+==================================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+----------------------------------------------------------------------------------
+Intercept         -0.0956      0.055     -1.751      0.085      -0.205       0.013
+prev_mood          1.1792      0.109     10.865      0.000       0.963       1.396
+surge_diff_abs     0.0022      0.001      3.665      0.000       0.001       0.003
+==============================================================================
+Omnibus:                       19.399   Durbin-Watson:                   1.888
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               30.753
+Skew:                           1.040   Prob(JB):                     2.10e-07
+Kurtosis:                       5.524   Cond. No.                         215.
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+RMSE=0.0549
+LOOCV RMSE=0.0563
+
+same-sex marriage
+=========
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                   mood   R-squared:                       0.544
+Model:                            OLS   Adj. R-squared:                  0.540
+Method:                 Least Squares   F-statistic:                     133.3
+Date:                Fri, 28 Jul 2017   Prob (F-statistic):           8.44e-39
+Time:                        16:51:55   Log-Likelihood:                 363.02
+No. Observations:                 226   AIC:                            -720.0
+Df Residuals:                     223   BIC:                            -709.8
+Df Model:                           2                                         
+Covariance Type:            nonrobust                                         
+==================================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+----------------------------------------------------------------------------------
+Intercept          0.0313      0.029      1.069      0.286      -0.026       0.089
+prev_mood          0.9198      0.072     12.830      0.000       0.779       1.061
+surge_diff_abs     0.0011      0.001      2.216      0.028       0.000       0.002
+==============================================================================
+Omnibus:                       76.066   Durbin-Watson:                   2.022
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              224.530
+Skew:                           1.445   Prob(JB):                     1.75e-49
+Kurtosis:                       6.936   Cond. No.                         206.
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+RMSE=0.0489
+LOOCV RMSE=0.0490
+
+gun control
+=========
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                   mood   R-squared:                       0.375
+Model:                            OLS   Adj. R-squared:                  0.369
+Method:                 Least Squares   F-statistic:                     60.23
+Date:                Fri, 28 Jul 2017   Prob (F-statistic):           3.20e-21
+Time:                        16:52:52   Log-Likelihood:                 312.00
+No. Observations:                 204   AIC:                            -618.0
+Df Residuals:                     201   BIC:                            -608.1
+Df Model:                           2                                         
+Covariance Type:            nonrobust                                         
+==================================================================================
+                     coef    std err          t      P>|t|      [0.025      0.975]
+----------------------------------------------------------------------------------
+Intercept         -0.0579      0.078     -0.746      0.456      -0.211       0.095
+prev_mood          1.0655      0.098     10.910      0.000       0.873       1.258
+surge_diff_abs     0.0002      0.000      2.197      0.029     2.3e-05       0.000
+==============================================================================
+Omnibus:                       79.258   Durbin-Watson:                   1.976
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              679.950
+Skew:                           1.214   Prob(JB):                    2.24e-148
+Kurtosis:                      11.608   Cond. No.                     1.39e+03
+==============================================================================
+
+Warnings:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+[2] The condition number is large, 1.39e+03. This might indicate that there are
+strong multicollinearity or other numerical problems.
+RMSE=0.0528
+LOOCV RMSE=0.0530
