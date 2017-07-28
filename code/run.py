@@ -79,7 +79,10 @@ def main():
         columns.append(s + '_loocv_rmse')
         columns.append(s + '_rank')
         columns.append(s + '_loocv_rank')
+    columns.append('mean_loocv_rank')
     results_df = pd.DataFrame([], columns=columns)
+
+    mean_rank = None
 
     for s_i, subject in enumerate(subjects):
         print('\n' + subject)
@@ -96,8 +99,13 @@ def main():
         results_df[subject + '_rank'] = ranks
         order = np.argsort(loocvs)
         ranks = np.argsort(order)
+        if mean_rank is None:
+            mean_rank = ranks.copy() / float(len(subjects))
+        else:
+            mean_rank += ranks / float(len(subjects))
         results_df[subject + '_loocv_rank'] = ranks
 
+    results_df['mean_loocv_rank'] = mean_rank
     results_df.index = model_names
     print(results_df)
     results_df.to_csv(os.path.join(output_dir, 'summary.csv'))
